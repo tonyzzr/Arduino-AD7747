@@ -1,7 +1,9 @@
 #define VERSION "\r\nVersion of installed firmware is V1.5 - 11/2019 by jankop"
 #include <Wire.h>
 #include <EEPROM.h>
+#include "Arduino.h"
 const uint8_t AD774X_ADDRESS = 0x48;// AD774X I2C address
+#define CAP_INTERRUPT_PIN  (1)
 //*********************** Settings! ********************************
 // AD7747 default registers definition for the differential input configuration
 // +- 8.192pF  or for the single-ended input configuration 0 - 8.192pF.
@@ -9,9 +11,11 @@ const uint8_t AD774X_ADDRESS = 0x48;// AD774X I2C address
 // Registers definitions are for AD7747 only! You must use yours own
 // registers settings for AD7745 or AD7746 here!
 const bool    AD7747         = false;       // Set your IC type, true = AD7747, false = AD7745/46
-const uint8_t DATA_CAP_SETUP = B11000000;  // 7  CAPEN+CIN2+CAPDIF+0000+CAPCHOP according, default cin2 single mode
+const uint8_t DATA_CAP_SETUP = B11100000;  // 7  CAPEN+CIN2+CAPDIF+0000+CAPCHOP according, default cin2 single mode
+const uint8_t DATA_CAP2_SETUP= B10100000;  //7 cin2
 const uint8_t DATA_VT_SETUP  = B00000001;  // 8  VTEN+VTMD1+VTMD0+EXTREF+00+VTSHORT+VTCHOP for internal temperature, default disable
-const uint8_t DATA_EXC_SETUP = B00001011;  // 9  CLKCTRL+EXCON+EXCB+EXCB^+EXCA+EXCA^+EXCLVL1+EXCLVL0, default EXCA 1/2Vdd
+const uint8_t DATA_EXC_SETUP = B00101011;  // 9  CLKCTRL+EXCON+EXCB+EXCB^+EXCA+EXCA^+EXCLVL1+EXCLVL0, default EXCA 1/2Vdd
+const uint8_t DATA_EXC2_SETUP= B00101011;  //9 cin2
 const uint8_t DATA_CFG       = B11000000;  // 10 VTF1+VTF0+CAPF2+CAPF1+CAPF0+MD2+MD1+MD0 , VT conversion time 8.2Hz, Cap conversion time 90.9Hz,Idel time
 const uint8_t DATA_CAPDACA   = B00000000;  // 11 CAPDACA OFF
 const uint8_t DATA_CAPDACB   = B00000000;  // 12 CAPDACB OFF
@@ -38,6 +42,11 @@ const uint8_t ADR_CAP_GAINH  = 15;  // factory calibration
 const uint8_t ADR_CAP_GAINL  = 16;  // factory calibration
 const uint8_t ADR_VOLT_GAINH = 17;  // factory calibration
 const uint8_t ADR_VOLT_GAINL = 18;  // factory calibration
+//const uint8_t ADR_CAP2_DATAH = 19;  //CAP value for channel 2
+//const uint8_t ADR_CAP2_DATAM = 20;
+//const uint8_t ADR_CAP2_DATAL = 21;
+
+
 //-------------------------------------------------------------------
 const uint8_t MODES          = B11111000;  // 0xF8 is "AND" mask for preset convert mode
 const uint8_t SINGLE         = B00000010;  // 0x02 is "OR" mask for start single convert mode
@@ -55,11 +64,12 @@ const unsigned long AD774XTimeOut = 1000;  // response waiting time when offset 
 unsigned long TimeTemp;                    // auxiliary variables for timing
 const uint8_t SxBuffLength = 8;            // length of input buffer for parsing commands
 uint8_t SxBuff[SxBuffLength + 1];          // input buffer for serial parser
-uint8_t RTxBuff[20];                       // I/O buffer for AD774X registers
+uint8_t RTxBuff[20];  
+uint8_t RTxBuff2[20];                     // I/O buffer for AD774X registers
 uint8_t I2C_State = 0;                     // status of I2C bus, 0 = without error
 unsigned int SamplePeriod = 100;          // sample period in [ms]
 float C1 = 0, C2 = 0;                      // auxiliary variables for zero correction calculation
-float Capacitance = 0.0, Temperature = 0.0;// real data
+float Capacitance = 0.0, Capacitance2 = 0.0, Temperature = 0.0;// real data
 bool EnablePeriodicSampling = true;       // periodic sampling with output to serial port, is default disabled
 bool EnableSerialTerminal = true;          // enable input from serial port
 bool EnableOffsetAutomatic = false;        // enable automatic offset, better said automatic zero setting, is stopped as default
@@ -73,6 +83,7 @@ const uint8_t DefaultRegisters[] PROGMEM = {0, 0, 0, 0, 0, 0, 0, DATA_CAP_SETUP,
 void(* resetFunc)(void) = 0;
 //----------------------------------------------------------------------
 void setup() {
+  pinMode(9, INPUT);
   Serial.begin(115200);
   Wire.begin();
   Serial.print(F("\r\nArduino Restart"));

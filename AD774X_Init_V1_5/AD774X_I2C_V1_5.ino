@@ -44,7 +44,7 @@ void AD774X_Read_Registers(uint8_t RegAdres, uint8_t *TxBuff, uint8_t quantity) 
 // Input: DataSingl - written data
 // Output: I2C_State - returns an error of I2C, 0 = without error
 //----------------------------------------------------------------------
-uint8_t AD774X_Write_Single_Register(uint8_t RegAdres, uint8_t DataSingl) {
+void AD774X_Write_Single_Register(uint8_t RegAdres, uint8_t DataSingl) {
   Wire.beginTransmission(AD774X_ADDRESS);
   Wire.write(RegAdres);
   Wire.write(DataSingl);
