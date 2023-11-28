@@ -12,12 +12,13 @@ void PeriodicSampling(void) {
     //AD774X_Write_Single_Register(ADR_CAPDACB,B10110111);//code work for length demo, need adjust for real data
   if ((millis() - SamplePeriod) > TimeTemp) {
     // reading valid data
+    while(digitalRead(D2) == HIGH){Serial.print(" , ");};
     AD774X_Read_Registers(ADR_CAP_DATAH, RTxBuff, 3);
     AD774X_Write_Single_Register(ADR_CAPDACA,B00110111);//code work for length demo, need adjust for real data
     AD774X_Write_Single_Register(ADR_CAP_SETUP,DATA_CAP2_SETUP);//change to channel 2
     //AD774X_Write_Single_Register(ADR_EXC_SETUP,DATA_EXC2_SETUP);//change to channel 2
     AD774X_Write_Single_Register(ADR_CFG, (AD774X_Read_Single_Register(ADR_CFG) & MODES) | CONTIN);
-    while(digitalRead(9) == HIGH){Serial.print(" , ");};
+    while(digitalRead(D2) == HIGH){Serial.print(" , ");};
     AD774X_Read_Registers(ADR_CAP_DATAH, RTxBuff2, 3);
     AD774X_Write_Single_Register(ADR_CAP_SETUP,DATA_CAP_SETUP);//change to channel 2
     AD774X_Write_Single_Register(ADR_CAPDACA,B10110111);//code work for length demo, need adjust for real data

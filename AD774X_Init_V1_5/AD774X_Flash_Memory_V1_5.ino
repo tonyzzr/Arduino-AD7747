@@ -1,6 +1,7 @@
 //----------------------------------------------------------------------
 void WriteRegistersFromFlash(void) {
   // 0xAA is flag for default setting AD774X from EEPROM
+  /*
   if (EEPROM.read(EEPROMStart) != 0xAA) {
     // read registers from PROGMEM
     for (uint8_t i = ADR_CAP_SETUP; i < ADR_CAP_GAINH; i++) {
@@ -14,10 +15,12 @@ void WriteRegistersFromFlash(void) {
     }
     EEPROM.get (EEPROMAddrSamplePeriod, SamplePeriod);
   }
+  */
   AD774X_Write_Registers(ADR_CAP_SETUP, RTxBuff, 8);
 }
 //----------------------------------------------------------------------
 void WriteRegistersToFlash(void) {
+  /*
   AD774X_Read_Registers(ADR_CAP_SETUP, RTxBuff, 8);
   for (int8_t i = ADR_CAP_SETUP; i < ADR_CAP_GAINH; i++) {
     EEPROM.update(i, RTxBuff[i]);
@@ -25,7 +28,8 @@ void WriteRegistersToFlash(void) {
   EEPROM.put (EEPROMAddrSamplePeriod, SamplePeriod);
   // 0xAA is flag for default setting AD774X from EEPROM
   EEPROM.update(EEPROMStart, 0xAA);
+  */
 }
 void DeleteEEPROM(void) {
-  for (uint8_t i = EEPROMStart; i < 19; i++)EEPROM.update(i, 0xFF);
+  //for (uint8_t i = EEPROMStart; i < 19; i++)EEPROM.update(i, 0xFF);
 }

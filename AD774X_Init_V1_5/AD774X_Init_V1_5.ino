@@ -1,6 +1,6 @@
 #define VERSION "\r\nVersion of installed firmware is V1.5 - 11/2019 by jankop"
 #include <Wire.h>
-#include <EEPROM.h>
+//#include <EEPROM.h>
 #include "Arduino.h"
 const uint8_t AD774X_ADDRESS = 0x48;// AD774X I2C address
 #define CAP_INTERRUPT_PIN  (1)
@@ -67,11 +67,11 @@ uint8_t SxBuff[SxBuffLength + 1];          // input buffer for serial parser
 uint8_t RTxBuff[20];  
 uint8_t RTxBuff2[20];                     // I/O buffer for AD774X registers
 uint8_t I2C_State = 0;                     // status of I2C bus, 0 = without error
-unsigned int SamplePeriod = 100;          // sample period in [ms]
+unsigned int SamplePeriod = 1;          // sample period in [ms]
 float C1 = 0, C2 = 0;                      // auxiliary variables for zero correction calculation
 float Capacitance = 0.0, Capacitance2 = 0.0, Temperature = 0.0;// real data
 bool EnablePeriodicSampling = true;       // periodic sampling with output to serial port, is default disabled
-bool EnableSerialTerminal = true;          // enable input from serial port
+bool EnableSerialTerminal = false;          // enable input from serial port
 bool EnableOffsetAutomatic = false;        // enable automatic offset, better said automatic zero setting, is stopped as default
 // the indexes in the DefaultRegisters field correspond to the addresses of each AD774X registry
 const uint8_t DefaultRegisters[] PROGMEM = {0, 0, 0, 0, 0, 0, 0, DATA_CAP_SETUP, DATA_VT_SETUP, DATA_EXC_SETUP, DATA_CFG,
@@ -96,7 +96,16 @@ void setup() {
   //--------------------------------------------------------------------
   AD774X_Reset();
   if (I2C_State != 0) Serial.print(F("\r\nAD774X not responding !"));
-  WriteRegistersFromFlash();
+  //WriteRegistersFromFlash();
+  //AD774X_Write_Registers(ADR_CAP_SETUP, RTxBuff, 8);
+  AD774X_Write_Single_Register(ADR_CAP_SETUP,DATA_CAP_SETUP);
+  AD774X_Write_Single_Register(ADR_VT_SETUP,DATA_VT_SETUP);
+  AD774X_Write_Single_Register(ADR_EXC_SETUP,DATA_EXC_SETUP);
+  AD774X_Write_Single_Register(ADR_CFG,DATA_CFG);
+  AD774X_Write_Single_Register(ADR_CAPDACA,DATA_CAPDACA);
+  AD774X_Write_Single_Register(ADR_CAPDACB,DATA_CAPDACB);
+  AD774X_Write_Single_Register(ADR_CAP_OFFH,DATA_CAP_OFFH);
+  AD774X_Write_Single_Register(ADR_CAP_OFFL,DATA_CAP_OFFL);
   StartNewConversion();
   Serial.print(F("\r\nI'm waiting for commands:"));
 }
