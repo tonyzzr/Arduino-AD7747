@@ -2,6 +2,7 @@
 #include <Wire.h>
 //#include <EEPROM.h>
 #include "Arduino.h"
+#define TCAADDR 0x70
 const uint8_t AD774X_ADDRESS = 0x48;// AD774X I2C address
 #define CAP_INTERRUPT_PIN  (1)
 //*********************** Settings! ********************************
@@ -82,8 +83,16 @@ const uint8_t DefaultRegisters[] PROGMEM = {0, 0, 0, 0, 0, 0, 0, DATA_CAP_SETUP,
 //----------------------------------------------------------------------
 void(* resetFunc)(void) = 0;
 //----------------------------------------------------------------------
+//tca select function 0->7
+void tcaselect(uint8_t i) {
+  if (i > 7) return;
+  Wire.beginTransmission(TCAADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();  
+}
+//setup
 void setup() {
-  pinMode(9, INPUT);
+  pinMode(D2, INPUT);//define callback funtion pin
   Serial.begin(115200);
   Wire.begin();
   Serial.print(F("\r\nArduino Restart"));
@@ -94,6 +103,7 @@ void setup() {
   // PROGMEM reuse is possible after application of the FR command. The commands are entered via
   // the serial interface as described in section AD774X_Comment.
   //--------------------------------------------------------------------
+  tcaselect(6);
   AD774X_Reset();
   if (I2C_State != 0) Serial.print(F("\r\nAD774X not responding !"));
   //WriteRegistersFromFlash();
